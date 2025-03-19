@@ -1,0 +1,29 @@
+.new-bttn {
+  width: 125px;
+  height: 150px;
+  background-color: #04dd04;
+  transition: background-color 0.3s ease;
+  border: none;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.plus {
+  font-size: 60px;
+  font-weight: bold;
+  color: black;
+}
+.new-bttn:hover {
+  background-color: black;
+}
+.new-bttn:hover .plus {
+  color: #04dd04;
+}
+.wrapper{
+  margin: 20px 25% 20px 25%;
+}
+.every-docs{
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+}

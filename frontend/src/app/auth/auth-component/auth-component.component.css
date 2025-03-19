@@ -1,0 +1,57 @@
+input[type="text"], input[type="password"] {
+  background-color: black;
+  color: #04dd04;
+  border: none;
+  font-family: 'Ubuntu Sans Mono', monospace;
+  font-size: 20px;
+  outline: none;
+  caret-color: transparent;
+  width: 100%;
+  padding: 5px;
+}
+.cursor {
+  position: absolute;
+  background-color: #04dd04;
+  height: 2px;
+  width: 8px;
+  pointer-events: none;
+  top: 26px;
+}
+.submit-btn {
+  display: block;
+  background-color: black;
+  color: #04dd04;
+  border: none;
+  font-family: 'Ubuntu Sans Mono', monospace;
+  font-size: 20px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 20px auto;
+}
+.submit-btn:hover {
+  background-color: #02b002;
+  color: black;
+}
+.input-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 75%;
+}
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+a{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: #04dd04;
+}
+a:hover{
+  color: #02b002;
+}
