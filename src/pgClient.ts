@@ -8,9 +8,4 @@ export const client = new Client({
     database: 'DocHub'
 });
 
-client.connect().then(()=>{
-    console.log("connected")
-})
-.catch((err) =>{
-    console.log(err)
-});
+client.connect();
