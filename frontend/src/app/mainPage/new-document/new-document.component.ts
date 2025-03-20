@@ -10,5 +10,7 @@ import {ExistingDocumentComponent} from '../existing-document/existing-document.
   styleUrl: './new-document.component.css'
 })
 export class NewDocumentComponent {
+  createNewDoc(){
 
+  }
 }
