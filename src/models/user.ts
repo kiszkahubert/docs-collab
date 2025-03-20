@@ -1,23 +1,20 @@
-import {client} from '../pgClient';
+import {Db, ObjectId} from 'mongodb';
 
 export interface User{
-    id: number,
-    email: string,
-    password: string
-    name: string,
-    surname: string
+    _id?: ObjectId;
+    name: string;
+    surname: string;
+    email: string;
+    password: string;
 }
 
-export async function getUserByEmail(email: string): Promise<User | null>{
-    try{
-        const res = await client.query(
-            'SELECT * FROM users WHERE email = $1', [email]
-        );
-        if(res.rows.length == 0) return null;
-        return res.rows[0] as User;
-    } catch(err){
-        console.error(err);
-        throw new Error("Func getUserByEmail failed");
-    }
-    
+export const createUser = async (db: Db, user: User)=>{
+    const usersCollection = db.collection("users");
+    const result = await usersCollection.insertOne(user);
+    return { _id: result.insertedId, ...user};
+}
+
+export const getUserByEmail = async(db:Db, email: string) =>{
+    const userCollection = db.collection("users");
+    return await userCollection.findOne({email});
 }
