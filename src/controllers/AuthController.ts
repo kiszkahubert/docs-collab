@@ -23,11 +23,21 @@ export const login = async (req: Request, res: Response)=>{
         const user = await getUserByEmail(db,email);
         if(user && await bcrypt.compare(password, user.password)){
             const token = jwt.sign({userId: user._id}, process.env.JWT_SECRET || '', {expiresIn: '1h'});
-            res.json({ token });
+            res.cookie('auth_token', token, {
+                httpOnly: true,
+                secure: false,
+                sameSite: 'strict',
+                maxAge: 3600000
+            })
+            res.json({success: true})
         } else {
             res.status(401).json({ message: "Invalid credentials" });
         }
     } catch(err){
         res.status(500).json({message:err});
     }
+}
+export const logout = async (req: Request, res: Response) =>{
+    res.clearCookie('auth_token');
+    res.json({ success: true });
 }

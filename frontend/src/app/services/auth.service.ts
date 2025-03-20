@@ -1,10 +1,11 @@
 import { Injectable } from "@angular/core";
 import {HttpClient} from '@angular/common/http';
 import {Observable, tap} from "rxjs";
+import { Router } from "@angular/router";
+
 
 interface LoginResponse{
-  token: string;
-  expiresIn: number;
+  success: boolean;
 }
 
 interface RegisterDTO{
@@ -18,33 +19,30 @@ interface RegisterDTO{
   providedIn: 'root'
 })
 export class AuthService{
-  constructor(private http: HttpClient) {}
+  private isLoggedIn = false;
+  constructor(private http: HttpClient, private router: Router) {}
   register(registerData: RegisterDTO): Observable<any>{
-    return this.http.post('http://localhost:8080/auth/signup',registerData)
+    return this.http.post('http://localhost:3000/auth/register',registerData)
   }
   login(email: string, password: string): Observable<LoginResponse>{
-    return this.http.post<LoginResponse>('http://localhost:8080/auth/login',{ email, password })
+    return this.http.post<LoginResponse>('http://localhost:3000/auth/login',{ email, password }, {withCredentials: true})
       .pipe(
         tap(response => {
-          localStorage.setItem('token', response.token);
-          localStorage.setItem('expiresIn', response.expiresIn.toString());
+          if(response.success){
+            this.isLoggedIn = true;
+          }
         })
     );
   }
-  logout(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('expiresIn');
-  }
-  getToken(): string | null {
-    return localStorage.getItem('token');
-  }
-  isAuthenticated(): boolean {
-    const token = this.getToken();
-    if (!token) return false;
-    const expiresIn = localStorage.getItem('expiresIn');
-    if (!expiresIn) return false;
-    const expirationDate = new Date(parseInt(expiresIn));
-    return expirationDate > new Date();
+  logout(): Observable<any> {
+    return this.http.post(
+      'http://localhost:3000/auth/logout', {}, {withCredentials:true}
+    ).pipe(
+      tap(()=>{
+        this.isLoggedIn = false
+        this.router.navigate(['/login'])
+      })
+    )
   }
 }
 

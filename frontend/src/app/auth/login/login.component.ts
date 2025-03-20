@@ -15,8 +15,8 @@ export class LoginComponent{
   handleLogin(creds: { email: string, password: string }) {
     this.authService.login(creds.email, creds.password)
       .subscribe({
-        next: () => {
-          this.router.navigate(['/']);
+        next: (response) => {
+          if(response.success) this.router.navigate(['/']);
         },
         error: (err) => {
           console.error(err);
