@@ -25,17 +25,7 @@ app.use(cors({
     credentials: true
 }))
 
-export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
-    const token = req.cookies.auth_token || (req.headers['authorization'] && req.headers['authorization'].split(' ')[1]);
-    if(token == null)  res.sendStatus(401);
-    jwt.verify(token, process.env.JWT_SECRET || "", (err: any, user: any) => {
-        if (err){
-            res.sendStatus(403);
-        }
-        req.user = user;
-        next();
-    });
-}
+
 
 connectDB().then((db) =>{
     app.locals.db = db;
