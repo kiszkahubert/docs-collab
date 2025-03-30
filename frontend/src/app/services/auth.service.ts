@@ -44,5 +44,15 @@ export class AuthService{
       })
     )
   }
+  isAuthenticated(): Observable<boolean>{
+    return this.http.get<boolean>(
+      'http://localhost:3000/api/validate', {withCredentials:true}).pipe(
+        tap({
+          error: () => {
+            console.log("WAS ERROR HERE")
+          }
+        })
+    )
+  }
 }
 

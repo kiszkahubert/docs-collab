@@ -3,11 +3,12 @@ import {RegisterComponent} from './auth/register/register.component';
 import {LoginComponent} from './auth/login/login.component';
 import {MainPageCombinedComponent} from './mainPage/main-page-combined/main-page-combined.component';
 import {DocumentComponent} from './document/document.component';
+import {AuthGuard} from './services/auth.guard';
 
 export const routes: Routes = [
-  { path: '', component: MainPageCombinedComponent},
+  { path: '', component: MainPageCombinedComponent, canActivate: [AuthGuard]},
   { path: 'register', component: RegisterComponent },
-  { path: 'login', component: LoginComponent },
-  { path: 'document', component: DocumentComponent},
-  { path: 'document/:id', component: DocumentComponent}
+  { path: 'login', component: LoginComponent},
+  { path: 'document', component: DocumentComponent,canActivate: [AuthGuard]},
+  { path: 'document/:id', component: DocumentComponent,canActivate: [AuthGuard]}
 ];

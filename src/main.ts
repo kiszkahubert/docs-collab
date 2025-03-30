@@ -6,6 +6,7 @@ import authRoutes from "./routes/authRoutes";
 import cookieParser from 'cookie-parser'
 import cors from 'cors';
 import documentRoutes from "./routes/documentRoutes";
+import apiRoutes from "./routes/apiRoutes";
 require('dotenv').config();
 
 declare global {
@@ -31,6 +32,7 @@ connectDB().then((db) =>{
     app.locals.db = db;
     app.use("/auth", authRoutes);
     app.use("/documents",documentRoutes);
+    app.use("/api",apiRoutes);
     app.listen(3000, () => {
         console.log('server running');
     });
