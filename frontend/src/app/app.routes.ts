@@ -8,5 +8,6 @@ export const routes: Routes = [
   { path: '', component: MainPageCombinedComponent},
   { path: 'register', component: RegisterComponent },
   { path: 'login', component: LoginComponent },
-  { path: 'document', component: DocumentComponent}
+  { path: 'document', component: DocumentComponent},
+  { path: 'document/:id', component: DocumentComponent}
 ];
