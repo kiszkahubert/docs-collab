@@ -6,10 +6,7 @@ import cookieParser from 'cookie-parser'
 import cors from 'cors';
 import documentRoutes from "./routes/documentRoutes";
 import apiRoutes from "./routes/apiRoutes";
-import dotenv from 'dotenv'
-dotenv.config();
-// require('dotenv').config();
-console.log('JWT_SECRET:', process.env.JWT_SECRET);
+require('dotenv').config();
 declare global {
     namespace Express {
         interface Request {
@@ -17,7 +14,6 @@ declare global {
         }
     }
 }
-
 
 const app = express();
 app.use(bodyParser.json());
