@@ -1,14 +1,15 @@
-import express, {NextFunction, Request, Response} from 'express';
+import express from 'express';
 import { connectDB } from "./mongoClient";
 import bodyParser from 'body-parser';
-import jwt from 'jsonwebtoken';
 import authRoutes from "./routes/authRoutes";
 import cookieParser from 'cookie-parser'
 import cors from 'cors';
 import documentRoutes from "./routes/documentRoutes";
 import apiRoutes from "./routes/apiRoutes";
-require('dotenv').config();
-
+import dotenv from 'dotenv'
+dotenv.config();
+// require('dotenv').config();
+console.log('JWT_SECRET:', process.env.JWT_SECRET);
 declare global {
     namespace Express {
         interface Request {

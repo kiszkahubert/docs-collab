@@ -31,9 +31,11 @@ export const login = async (req: Request, res: Response)=>{
             })
             res.json({success: true})
         } else {
+            console.error("ERROR2")
             res.status(401).json({ message: "Invalid credentials" });
         }
     } catch(err){
+        console.error("ERROR1",err)
         res.status(500).json({message:err});
     }
 }
