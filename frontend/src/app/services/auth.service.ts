@@ -1,8 +1,9 @@
 import { Injectable } from "@angular/core";
 import {HttpClient} from '@angular/common/http';
-import {Observable, tap} from "rxjs";
+import {Observable} from "rxjs";
 import { Router } from "@angular/router";
-
+import { map, tap, catchError } from "rxjs/operators";
+import { of } from "rxjs";
 
 interface LoginResponse{
   success: boolean;
@@ -44,15 +45,14 @@ export class AuthService{
       })
     )
   }
-  isAuthenticated(): Observable<boolean>{
-    return this.http.get<boolean>(
-      'http://localhost:3000/api/validate', {withCredentials:true}).pipe(
-        tap({
-          error: () => {
-            console.log("WAS ERROR HERE")
-          }
-        })
-    )
+  isAuthenticated(): Observable<boolean> {
+    return this.http.get<LoginResponse>(
+      'http://localhost:3000/api/validate',
+      { withCredentials: true }
+    ).pipe(
+      map(response => response.success),
+      catchError(() => of(false))
+    );
   }
 }
 

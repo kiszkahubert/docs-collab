@@ -12,6 +12,7 @@ export const register = async (req: Request, res:Response) =>{
         const createdUser = await createUser(db, newUser);
         res.status(201).json(createdUser);
     } catch (err){
+        console.log(err);
         res.status(500).json({message:err});
     }
 }
