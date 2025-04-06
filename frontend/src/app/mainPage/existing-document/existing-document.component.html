@@ -1,10 +1,10 @@
-<div class="element">
+<div class="element" (click)="openDocument()">
   <div class="upper">
     <img src="testPNG.png" alt="test">
   </div>
   <div class="separator"></div>
   <div class="lower">
-    <p><strong>testPNG.png</strong></p>
-    <p>Otwarto: <strong>2025-02-06</strong></p>
+    <p><strong>{{ document.title }}</strong></p>
+    <p>Otwarto: <strong>{{ document.createdAt | date: 'yyyy-MM-dd' }}</strong></p>
   </div>
 </div>

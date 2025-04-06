@@ -1,1 +1,3 @@
 1) In localhost:3000/api/documents/ i should not return whole documents after creation but only document id
+2) W document na froncie zrobic bufor na tekst i potem w ngBeforeUnload() zrobic ze z bufora ma zapisac dane
+3) Żeby nadać dostęp do edycji pliku innym osobom trzeba będzie stworzyć jakiś notifier który wyśle powiadomienie na front i użytkownik będzie mógł
