@@ -1,0 +1,1 @@
+1) In localhost:3000/api/documents/ i should not return whole documents after creation but only document id

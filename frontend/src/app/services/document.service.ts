@@ -14,7 +14,7 @@ export interface Document{
   providedIn: 'root'
 })
 export class DocumentService{
-  private apiUrl = 'https://localhost:3000/documents';
+  private apiUrl = 'http://localhost:3000/documents';
   constructor(private http: HttpClient){}
   getUserDocuments(): Observable<Document[]> {
     return this.http.get<Document[]>(this.apiUrl)
