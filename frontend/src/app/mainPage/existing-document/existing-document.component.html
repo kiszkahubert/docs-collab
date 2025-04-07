@@ -1,6 +1,14 @@
 <div class="element" (click)="openDocument()">
   <div class="upper">
     <img src="testPNG.png" alt="test">
+    <button mat-icon-button [matMenuTriggerFor]="menu" (click)="$event.stopPropagation()" class="menu-button">
+      <span class="menu-dots">&#8942;</span>
+    </button>
+    <mat-menu #menu="matMenu">
+      <button mat-menu-item (click)="openShareDialog($event)">
+        <span>Udostępnij</span>
+      </button>
+    </mat-menu>
   </div>
   <div class="separator"></div>
   <div class="lower">

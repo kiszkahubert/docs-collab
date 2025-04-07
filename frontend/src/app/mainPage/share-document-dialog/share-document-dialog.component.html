@@ -1,0 +1,17 @@
+<h2 mat-dialog-title>Udostępnij dokument</h2>
+<div mat-dialog-content>
+  <mat-form-field appearance="outline" class="w-full">
+    <mat-label>Email użytkownika</mat-label>
+    <input matInput [formControl]="emailControl" placeholder="Wpisz email">
+    @if(emailControl.hasError('required')){
+      <mat-error>Email jest wymagany</mat-error>
+    }
+    @if(emailControl.hasError('email')){
+      <mat-error>Nieprawidłowy format email</mat-error>
+    }
+  </mat-form-field>
+</div>
+<div mat-dialog-actions>
+  <button mat-button (click)="onCancel()">Anuluj</button>
+  <button mat-raised-button color="primary" (click)="onShare()" [disabled]="emailControl.invalid">Udostępnij</button>
+</div>

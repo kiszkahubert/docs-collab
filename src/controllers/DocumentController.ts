@@ -106,7 +106,12 @@ export const shareDocument: RequestHandler = async(req:Request, res:Response): P
     try{
         const db: Db = req.app.locals.db;
         const documentId = req.params.id;
-        const {userId, canEdit} = req.body;
+        const { email, canEdit } = req.body;
+        const user = await db.collection('users').findOne({ email });
+        if(!user){
+            res.status(404).json({message: "User not found"});
+            return;
+        }
         const document = await getDocumentById(db, documentId);
         if(!document){
             res.status(404).json({message: "document not found"});
@@ -116,13 +121,13 @@ export const shareDocument: RequestHandler = async(req:Request, res:Response): P
             res.status(403).json({message:"Only owner can share its document"});
             return;
         }
-        if(document.sharedWith?.some((sw: sharedWith) =>sw.userId.toString()===userId)){
+        if(document.sharedWith?.some((sw: sharedWith) => sw.userId.toString() === user._id.toString())){
             res.status(400).json({message:"user already has access"});
             return;
         }
         await db.collection<Document>('documents').updateOne(
             {_id: new ObjectId(documentId)},
-            {$push: {sharedWith: {userId: new ObjectId(userId), canEdit: canEdit || false}}}
+            {$push: {sharedWith: {userId: user._id, canEdit: canEdit || false}}}
         );
         res.json({success: true});
     }catch(err){
@@ -130,6 +135,35 @@ export const shareDocument: RequestHandler = async(req:Request, res:Response): P
         res.status(500).json({message: "error sharing document"});
     }
 }
+
+// export const shareDocument: RequestHandler = async(req:Request, res:Response): Promise<void>=>{
+//     try{
+//         const db: Db = req.app.locals.db;
+//         const documentId = req.params.id;
+//         const {userId, canEdit} = req.body;
+//         const document = await getDocumentById(db, documentId);
+//         if(!document){
+//             res.status(404).json({message: "document not found"});
+//             return;
+//         }
+//         if(document.userId.toString() !== req.user.userId){
+//             res.status(403).json({message:"Only owner can share its document"});
+//             return;
+//         }
+//         if(document.sharedWith?.some((sw: sharedWith) =>sw.userId.toString()===userId)){
+//             res.status(400).json({message:"user already has access"});
+//             return;
+//         }
+//         await db.collection<Document>('documents').updateOne(
+//             {_id: new ObjectId(documentId)},
+//             {$push: {sharedWith: {userId: new ObjectId(userId), canEdit: canEdit || false}}}
+//         );
+//         res.json({success: true});
+//     }catch(err){
+//         console.error(err);
+//         res.status(500).json({message: "error sharing document"});
+//     }
+// }
 
 export const revokeAccess: RequestHandler = async(req: Request, res: Response): Promise<void>=>{
     try{

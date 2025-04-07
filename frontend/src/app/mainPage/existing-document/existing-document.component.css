@@ -31,4 +31,24 @@ img {
 .lower p {
   margin: 5px 0;
 }
+.menu-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
+.menu-dots {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.upper {
+  position: relative;
+}

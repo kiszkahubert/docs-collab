@@ -31,4 +31,16 @@ export class DocumentService{
   deleteDocument(id: string): Observable<any>{
     return this.http.delete(`${this.apiUrl}/${id}`);
   }
+  shareDocument(documentId: string, email: string, canEdit: boolean): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${documentId}/share`, {
+      email,
+      canEdit
+    });
+  }
+  getSharedUsers(documentId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/${documentId}/shared`);
+  }
+  revokeAccess(documentId: string, userId: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${documentId}/share/${userId}`);
+  }
 }
