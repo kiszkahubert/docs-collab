@@ -5,6 +5,10 @@ export interface Document{
     title: string
     content: string
     userId: ObjectId;
+    sharedWith: {
+        userId: ObjectId,
+        canEdit: boolean
+    }[],
     createdAt: Date;
     updatedAt: Date
 }
