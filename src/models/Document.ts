@@ -24,7 +24,11 @@ export const getDocumentById = async (db: Db, id: string)=>{
 }
 export const getDocumentsByUserId = async (db: Db, userId:string)=>{
     const documentsCollection = db.collection("documents");
-    return await documentsCollection.find({userId: new ObjectId(userId)}).toArray();
+    return await documentsCollection.find({
+        $or:[
+            {userId: new ObjectId(userId)},
+            {"sharedWith.userId": new ObjectId(userId)}
+        ]}).toArray();
 }
 export const updateDocument = async(db:Db, id: string, content: string, title: string) =>{
     const documentsCollection = db.collection("documents");

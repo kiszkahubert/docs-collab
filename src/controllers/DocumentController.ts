@@ -2,6 +2,8 @@ import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { Db, ObjectId } from 'mongodb';
 import { createDocument, getDocumentById, getDocumentsByUserId, updateDocument, deleteDocument } from '../models/Document';
 
+interface sharedWith{userId: ObjectId, canEdit: Boolean}
+
 export const createNewDocument: RequestHandler = async (req: Request, res: Response): Promise<void> => {
     try{
         const db: Db = req.app.locals.db;
@@ -31,7 +33,7 @@ export const getDocument: RequestHandler = async (req: Request, res: Response): 
             res.status(404).json({message:"document not found"});
             return;
         }
-        if(document.userId.toString() !== req.user.userId) {
+        if(document.userId.toString() !== req.user.userId && !document.sharedWith?.some((sw: sharedWith)=>sw.userId.toString() === req.user.userId)) {
             res.status(403).json({message:"you dont have access to this document"});
             return;
         }
@@ -64,9 +66,12 @@ export const updateDocumentContent: RequestHandler = async (req: Request, res: R
             res.status(404).json({message:"doc not found"});
             return;
         }
-        if(document.userId.toString() !== req.user.userId) {
-            res.status(403).json({message:"dont have access to edit this document"});
-            return;
+        if(document.userId.toString() !== req.user.userId ) {
+            const sharedAccess = document.sharedWith?.find((sw: sharedWith)=>sw.userId.toString() === req.user.userId)
+            if(!sharedAccess || !sharedAccess.canEdit){
+                res.status(403).json({message:"dont have access to edit this document"});
+                return;
+            }
         }
         await updateDocument(db, documentId, content, title || document.title);
         res.json({success:true});
@@ -111,7 +116,7 @@ export const shareDocument: RequestHandler = async(req:Request, res:Response): P
             res.status(403).json({message:"Only owner can share its document"});
             return;
         }
-        if(document.sharedWith?.some((sw: {userId: ObjectId, canEdit: Boolean}) =>sw.userId.toString()===userId)){
+        if(document.sharedWith?.some((sw: sharedWith) =>sw.userId.toString()===userId)){
             res.status(400).json({message:"user already has access"});
             return;
         }

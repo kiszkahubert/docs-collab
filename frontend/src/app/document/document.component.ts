@@ -1,9 +1,10 @@
-import { AfterViewInit, Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, HostListener, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {QuillEditorComponent, QuillModule} from 'ngx-quill';
 import {FormControl, FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {debounceTime, Subscription} from 'rxjs';
 import {ActivatedRoute} from '@angular/router';
 import {DocumentService} from '../services/document.service';
+import {CanComponentDeactivate} from '../services/save-progress.guard';
 
 @Component({
   selector: 'app-document',
@@ -14,6 +15,7 @@ import {DocumentService} from '../services/document.service';
 export class DocumentComponent implements OnInit, OnDestroy, AfterViewInit{
   documentId: string = '';
   editorContent: string = '';
+  hasUnsavedChanges = false;
   titleControl = new FormControl('Nowy dokument');
   @ViewChild(QuillEditorComponent) editor!: QuillEditorComponent;
   private contentChangeSub: Subscription | undefined;
@@ -34,10 +36,11 @@ export class DocumentComponent implements OnInit, OnDestroy, AfterViewInit{
   }
   ngAfterViewInit(){
     this.editorChangeSub = this.editor.onContentChanged
-      .pipe(debounceTime(1000))
+      .pipe(debounceTime(500))
       .subscribe((change: any) =>{
         if(change.source === 'user'){
           this.editorContent = this.editor.quillEditor.root.innerHTML;
+          this.hasUnsavedChanges = true;
           if(this.documentId && !this.saveInProgress){
             this.saveDocument();
           }
@@ -48,6 +51,22 @@ export class DocumentComponent implements OnInit, OnDestroy, AfterViewInit{
     if (this.contentChangeSub) this.contentChangeSub.unsubscribe();
     if (this.titleChangeSub) this.titleChangeSub.unsubscribe();
     if (this.editorChangeSub) this.editorChangeSub.unsubscribe();
+  }
+  @HostListener('window:beforeunload',['$event'])
+  async beforeUnloadHandler(event: BeforeUnloadEvent){
+    if(this.documentId && !this.saveInProgress){
+      event.returnValue = false;
+      try{
+        this.saveInProgress = true;
+        await this.documentService.updateDocument(
+          this.documentId,
+          this.editorContent,
+          this.titleControl.value || 'untitled'
+        ).toPromise()
+      } finally {
+        this.saveInProgress = false;
+      }
+    }
   }
   loadDocument() {
     this.documentService.getDocument(this.documentId).subscribe(
@@ -79,16 +98,4 @@ export class DocumentComponent implements OnInit, OnDestroy, AfterViewInit{
       }
     );
   }
-
-
-  // editorContent: string = '';
-  // @ViewChild(QuillEditorComponent) editor!: QuillEditorComponent;
-  // ngAfterViewInit() {
-  //   this.editor.onContentChanged.subscribe((change: any) => {
-  //     const delta = change.delta;
-  //     if (change.source === 'user') {
-  //       console.log(delta);
-  //     }
-  //   });
-  // }
 }
