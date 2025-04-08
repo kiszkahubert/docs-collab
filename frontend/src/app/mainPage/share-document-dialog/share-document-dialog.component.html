@@ -1,7 +1,7 @@
 <div class="dark-theme-dialog">
   <h2 mat-dialog-title>Udostępnij dokument</h2>
   <div mat-dialog-content>
-    <mat-form-field appearance="outline" class="w-full">
+    <mat-form-field appearance="outline" class="w-full" hideRequiredMarker>
       <mat-label>Email użytkownika</mat-label>
       <input matInput [formControl]="emailControl" placeholder="Wpisz email">
       @if(emailControl.hasError('required')){
