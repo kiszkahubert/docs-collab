@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser'
 import cors from 'cors';
 import documentRoutes from "./routes/documentRoutes";
 import apiRoutes from "./routes/apiRoutes";
+import {Db} from "mongodb";
 require('dotenv').config();
 declare global {
     namespace Express {
@@ -23,14 +24,12 @@ app.use(cors({
     credentials: true
 }))
 
-
-
 connectDB().then((db) =>{
     app.locals.db = db;
     app.use("/auth", authRoutes);
     app.use("/documents",documentRoutes);
     app.use("/api",apiRoutes);
-    app.listen(3000, () => {
+    const server = app.listen(3000, () => {
         console.log('server running');
     });
 })

@@ -4,7 +4,6 @@ import {FormControl, FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {debounceTime, Subscription} from 'rxjs';
 import {ActivatedRoute} from '@angular/router';
 import {DocumentService} from '../services/document.service';
-import {CanComponentDeactivate} from '../services/save-progress.guard';
 
 @Component({
   selector: 'app-document',
