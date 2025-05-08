@@ -16,7 +16,6 @@ import {Router} from '@angular/router';
 export class RegisterComponent {
   constructor(private authService: AuthService, private router: Router) {}
   handleRegister(creds: { email: string, password: string, name?: string, surname?: string }){
-    console.log(creds);
     this.authService.register(creds)
       .subscribe({
         next: (user) => {

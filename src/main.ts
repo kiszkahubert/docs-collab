@@ -6,8 +6,7 @@ import cookieParser from 'cookie-parser'
 import cors from 'cors';
 import documentRoutes from "./routes/documentRoutes";
 import apiRoutes from "./routes/apiRoutes";
-import {Db} from "mongodb";
-import {setupWebSocket} from "./websockets/websocket";
+import {setupWebSocket} from "./websockets/websocketService";
 require('dotenv').config();
 declare global {
     namespace Express {
@@ -33,7 +32,7 @@ connectDB().then((db) =>{
     const server = app.listen(3000, () => {
         console.log('server running');
     });
-    setupWebSocket(server,db!);
+    setupWebSocket(server);
 })
 
 

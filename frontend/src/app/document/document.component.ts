@@ -21,7 +21,9 @@ export class DocumentComponent implements OnInit, OnDestroy, AfterViewInit{
   private titleChangeSub: Subscription | undefined;
   private saveInProgress = false;
   private editorChangeSub : Subscription | undefined
-  constructor(private route: ActivatedRoute, private documentService: DocumentService) {}
+  constructor(
+    private route: ActivatedRoute,
+    private documentService: DocumentService) {}
   ngOnInit() {
     this.route.params.subscribe(params => {
       this.documentId = params['id'];
@@ -39,6 +41,7 @@ export class DocumentComponent implements OnInit, OnDestroy, AfterViewInit{
       .subscribe((change: any) =>{
         if(change.source === 'user'){
           this.editorContent = this.editor.quillEditor.root.innerHTML;
+          console.log(this.editorContent);
           this.hasUnsavedChanges = true;
           if(this.documentId && !this.saveInProgress){
             this.saveDocument();
