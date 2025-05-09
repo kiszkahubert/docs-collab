@@ -4,6 +4,7 @@ import {FormControl, FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {debounceTime, Subscription} from 'rxjs';
 import {ActivatedRoute} from '@angular/router';
 import {DocumentService} from '../services/document.service';
+import {WebsocketService} from '../services/websocket.service';
 
 @Component({
   selector: 'app-document',
@@ -23,10 +24,12 @@ export class DocumentComponent implements OnInit, OnDestroy, AfterViewInit{
   private editorChangeSub : Subscription | undefined
   constructor(
     private route: ActivatedRoute,
-    private documentService: DocumentService) {}
+    private documentService: DocumentService,
+    private websocketService: WebsocketService) {}
   ngOnInit() {
     this.route.params.subscribe(params => {
       this.documentId = params['id'];
+      this.websocketService.connectToDocument(this.documentId);
       if(this.documentId) this.loadDocument();
     });
     this.titleChangeSub = this.titleControl.valueChanges

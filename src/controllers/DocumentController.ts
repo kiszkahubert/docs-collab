@@ -7,6 +7,7 @@ interface sharedWith{userId: ObjectId, canEdit: Boolean}
 export const createNewDocument: RequestHandler = async (req: Request, res: Response): Promise<void> => {
     try{
         const db: Db = req.app.locals.db;
+        const wsServer = req.app.locals.wsServer;
         const userId = new ObjectId(req.user.userId);
         const newDocument = {
             title: req.body.title || "Nowy Dokument",
@@ -17,6 +18,9 @@ export const createNewDocument: RequestHandler = async (req: Request, res: Respo
             updatedAt: new Date()
         };
         const createdDocument = await createDocument(db, newDocument);
+        if(wsServer){
+            wsServer.notifyDocumentUpdate(createdDocument._id.toString(), createdDocument);
+        }
         res.status(201).json(createdDocument);
     } catch (err){
         console.error(err);
@@ -27,6 +31,7 @@ export const createNewDocument: RequestHandler = async (req: Request, res: Respo
 export const getDocument: RequestHandler = async (req: Request, res: Response): Promise<void> => {
     try{
         const db: Db = req.app.locals.db;
+        const wsServer = req.app.locals.wsServer;
         const documentId = req.params.id;
         const document = await getDocumentById(db, documentId);
         if(!document) {
@@ -36,6 +41,9 @@ export const getDocument: RequestHandler = async (req: Request, res: Response): 
         if(document.userId.toString() !== req.user.userId && !document.sharedWith?.some((sw: sharedWith)=>sw.userId.toString() === req.user.userId)) {
             res.status(403).json({message:"you dont have access to this document"});
             return;
+        }
+        if(wsServer){
+            wsServer.notifyUserJoined(documentId, new ObjectId(req.user.userId));
         }
         res.json(document);
     } catch (err){
@@ -59,6 +67,7 @@ export const getUserDocuments: RequestHandler = async (req: Request, res: Respon
 export const updateDocumentContent: RequestHandler = async (req: Request, res: Response): Promise<void> => {
     try{
         const db: Db = req.app.locals.db;
+        const wsServer = req.app.locals.wsServer;
         const documentId = req.params.id;
         const {content, title} = req.body;
         const document = await getDocumentById(db, documentId);
@@ -74,6 +83,10 @@ export const updateDocumentContent: RequestHandler = async (req: Request, res: R
             }
         }
         await updateDocument(db, documentId, content, title || document.title);
+        const updatedDoc = await getDocumentsByUserId(db,documentId);
+        if(wsServer && updatedDoc){
+            wsServer.notifyDocumentUpdate(documentId, updatedDoc);
+        }
         res.json({success:true});
     } catch(err){
         console.error(err);

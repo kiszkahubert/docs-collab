@@ -6,7 +6,8 @@ import cookieParser from 'cookie-parser'
 import cors from 'cors';
 import documentRoutes from "./routes/documentRoutes";
 import apiRoutes from "./routes/apiRoutes";
-import {setupWebSocket} from "./websockets/websocketService";
+import {createServer} from "node:http";
+import {WebsocketServer} from "./websockets/websocketService";
 require('dotenv').config();
 declare global {
     namespace Express {
@@ -26,14 +27,14 @@ app.use(cors({
 
 connectDB().then((db) =>{
     app.locals.db = db;
+    const server = createServer(app);
+    const wsServer = new WebsocketServer(server, db!)
+    app.locals.wsServer = wsServer;
+    app.set('wsServer',wsServer);
     app.use("/auth", authRoutes);
     app.use("/documents",documentRoutes);
     app.use("/api",apiRoutes);
-    const server = app.listen(3000, () => {
+    server.listen(3000, () => {
         console.log('server running');
     });
-    setupWebSocket(server);
 })
-
-
-
