@@ -3,7 +3,6 @@ import WebSocket from "ws";
 import { parse } from 'cookie';
 import jwt from 'jsonwebtoken';
 
-
 interface DocumentConnection{
     userId: ObjectId;
     ws: WebSocket;
@@ -167,13 +166,32 @@ export class WebsocketServer{
     private handleClientMessage(documentId: string, userId: ObjectId, data: string) {
         try {
             const message = JSON.parse(data);
-            console.log(`Message from user ${userId} on document ${documentId}:`, message);
-            const connections = this.documentConnections.get(documentId) || [];
-            connections.forEach(conn => {
-                if (!conn.userId.equals(userId) && conn.ws.readyState === WebSocket.OPEN) {
-                    conn.ws.send(data);
-                }
-            });
+            if (message.type === 'content_update') {
+                this.db.collection('documents').updateOne(
+                    { _id: new ObjectId(documentId) },
+                    {
+                        $set: {
+                            content: message.content,
+                            title: message.title || 'Untitled',
+                            updatedAt: new Date()
+                        }
+                    }
+                ).then(() => {
+                    const connections = this.documentConnections.get(documentId) || [];
+                    connections.forEach(conn => {
+                        if (conn.ws.readyState === WebSocket.OPEN) {
+                            conn.ws.send(JSON.stringify({
+                                type: 'content_update',
+                                content: message.content,
+                                title: message.title,
+                                updatedBy: userId.toString()
+                            }));
+                        }
+                    });
+                }).catch(err => {
+                    console.error(err);
+                });
+            }
         } catch (err) {
             console.error(err);
         }

@@ -9,5 +9,5 @@ import {LoginComponent} from './auth/login/login.component';
   styleUrl: './app.component.css'
 })
 export class AppComponent {
-  title = 'frontend';
+  title = 'docs';
 }

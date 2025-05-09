@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { AuthService } from './auth.service';
+import {Subject} from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -7,50 +8,51 @@ import { AuthService } from './auth.service';
 export class WebsocketService {
   private socket: WebSocket | null = null;
   private documentId: string | null = null;
-
+  public onContentUpdate = new Subject<{content: string, title: string}>();
   constructor(private authService: AuthService) {}
-
   connectToDocument(documentId: string): void {
     if (this.socket) {
       this.disconnect();
     }
-
     this.documentId = documentId;
     this.socket = new WebSocket(`ws://localhost:3000/documents/ws?documentId=${documentId}`);
-
     this.socket.onopen = () => {
       console.log('WebSocket connected');
     };
-
     this.socket.onmessage = (event) => {
       const message = JSON.parse(event.data);
       this.handleSocketMessage(message);
     };
-
     this.socket.onclose = () => {
       console.log('WebSocket disconnected');
     };
-
     this.socket.onerror = (error) => {
       console.error('WebSocket error:', error);
     };
   }
-
   disconnect(): void {
     if (this.socket) {
       this.socket.close();
       this.socket = null;
     }
   }
-
-  sendUpdate(update: any): void {
+  sendContentUpdate(content: string, title: string): void {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify(update));
+      this.socket.send(JSON.stringify({
+        type: 'content_update',
+        content,
+        title
+      }));
     }
   }
-
   private handleSocketMessage(message: any): void {
     switch (message.type) {
+      case 'content_update':
+        this.onContentUpdate.next({
+          content: message.content,
+          title: message.title
+        });
+        break;
       case 'document_update':
         this.handleDocumentUpdate(message.data);
         break;
@@ -67,19 +69,15 @@ export class WebsocketService {
         console.warn('Unknown message type:', message.type);
     }
   }
-
   private handleDocumentUpdate(document: any): void {
     console.log('Document updated:', document);
   }
-
   private handleUserJoined(userId: string): void {
     console.log(`User ${userId} joined the document`);
   }
-
   private handleUserLeft(userId: string): void {
     console.log(`User ${userId} left the document`);
   }
-
   private handleInitialConnection(data: any): void {
     console.log('Initial connection:', data);
   }

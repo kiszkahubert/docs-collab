@@ -7,7 +7,7 @@ import cors from 'cors';
 import documentRoutes from "./routes/documentRoutes";
 import apiRoutes from "./routes/apiRoutes";
 import {createServer} from "node:http";
-import {WebsocketServer} from "./websockets/websocketService";
+import {WebsocketServer} from "./websockets/websocketServer";
 require('dotenv').config();
 declare global {
     namespace Express {

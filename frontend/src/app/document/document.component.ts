@@ -31,6 +31,15 @@ export class DocumentComponent implements OnInit, OnDestroy, AfterViewInit{
       this.documentId = params['id'];
       this.websocketService.connectToDocument(this.documentId);
       if(this.documentId) this.loadDocument();
+      this.websocketService.onContentUpdate.subscribe(update => {
+        if (this.editorContent !== update.content || this.titleControl.value !== update.title) {
+          this.editorContent = update.content;
+          this.titleControl.setValue(update.title, { emitEvent: false });
+          if (this.editor && this.editor.quillEditor) {
+            this.editor.quillEditor.clipboard.dangerouslyPasteHTML(0, update.content);
+          }
+        }
+      });
     });
     this.titleChangeSub = this.titleControl.valueChanges
       .pipe(debounceTime(2000))
@@ -40,12 +49,15 @@ export class DocumentComponent implements OnInit, OnDestroy, AfterViewInit{
   }
   ngAfterViewInit(){
     this.editorChangeSub = this.editor.onContentChanged
-      .pipe(debounceTime(500))
       .subscribe((change: any) =>{
         if(change.source === 'user'){
           this.editorContent = this.editor.quillEditor.root.innerHTML;
           console.log(this.editorContent);
           this.hasUnsavedChanges = true;
+          this.websocketService.sendContentUpdate(
+            this.editorContent,
+            this.titleControl.value || 'Untitled'
+          );
           if(this.documentId && !this.saveInProgress){
             this.saveDocument();
           }
