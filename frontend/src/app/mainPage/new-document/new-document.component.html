@@ -6,7 +6,10 @@
   <h2>Wszystkie dokumenty</h2>
   <div class="every-docs">
     @for (doc of documents; track doc._id){
-      <app-existing-document [document]="doc"></app-existing-document>
+      <app-existing-document
+        [document]="doc"
+        (documentDeleted)="onDocumentDeleted($event)">
+      </app-existing-document>
     }
   </div>
 </div>

@@ -38,4 +38,7 @@ export class NewDocumentComponent implements OnInit{
       }
     })
   }
+  onDocumentDeleted(documentId:string):void{
+    this.documents = this.documents.filter(doc=> doc._id !== documentId);
+  }
 }
