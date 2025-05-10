@@ -1,0 +1,16 @@
+<div class="dark-theme-dialog">
+  <h2 mat-dialog-title>Zmień tytuł dokumentu</h2>
+  <div mat-dialog-content>
+    <mat-form-field appearance="outline" class="w-full" hideRequiredMarker>
+      <mat-label>Tytuł dokumentu</mat-label>
+      <input matInput [formControl]="titleControl" placeholder="Wpisz nowy tytuł" autofocus>
+      @if(titleControl.hasError('required')){
+        <mat-error class="custom-error">Tytuł jest wymagany</mat-error>
+      }
+    </mat-form-field>
+  </div>
+  <div mat-dialog-actions>
+    <button mat-button (click)="onCancel()">Anuluj</button>
+    <button mat-raised-button color="primary" (click)="onSave()" [disabled]="titleControl.invalid">Zapisz</button>
+  </div>
+</div>

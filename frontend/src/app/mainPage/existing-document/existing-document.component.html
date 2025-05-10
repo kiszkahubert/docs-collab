@@ -1,6 +1,6 @@
 <div class="element" (click)="openDocument()">
   <div class="upper">
-    <img src="testPNG.png" alt="test">
+    <img [src]="previewImage" alt="document preview">
     <button mat-icon-button [matMenuTriggerFor]="menu" (click)="$event.stopPropagation()" class="menu-button">
       <span class="menu-dots">&#8942;</span>
     </button>
@@ -10,6 +10,9 @@
       </button>
       <button mat-menu-item (click)="deleteDocument($event)">
         <span>Usuń</span>
+      </button>
+      <button mat-menu-item (click)="changeDocumentTitle($event)">
+        <span>Zmień tytuł</span>
       </button>
     </mat-menu>
   </div>

@@ -1,5 +1,5 @@
 DONE - TODO 1) On front page add option to delete document (on 3 dots)
-TODO 2) On front page add option to change document name (on 3 dots)
+DONE - TODO 2) On front page add option to change document name (on 3 dots)
 TODO 3) On front page change current static yellow pic, instead make some code that will create picture from the existing text inside the file
 TODO 4) Tweak websockets as they are kinda shiet rn
 TODO 5) Fix quillEditor as for some reason cursor after space is placed it moves cursor to the beginning
