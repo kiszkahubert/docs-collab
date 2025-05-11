@@ -21,7 +21,7 @@ export class DocumentComponent implements OnInit, OnDestroy, AfterViewInit{
   private contentChangeSub: Subscription | undefined;
   private titleChangeSub: Subscription | undefined;
   private saveInProgress = false;
-  private editorChangeSub : Subscription | undefined
+  private editorChangeSub : Subscription | undefined;
   constructor(
     private route: ActivatedRoute,
     private documentService: DocumentService,
@@ -32,11 +32,16 @@ export class DocumentComponent implements OnInit, OnDestroy, AfterViewInit{
       this.websocketService.connectToDocument(this.documentId);
       if(this.documentId) this.loadDocument();
       this.websocketService.onContentUpdate.subscribe(update => {
+        const selection = this.editor.quillEditor.getSelection();
         if (this.editorContent !== update.content || this.titleControl.value !== update.title) {
           this.editorContent = update.content;
           this.titleControl.setValue(update.title, { emitEvent: false });
           if (this.editor && this.editor.quillEditor) {
             this.editor.quillEditor.clipboard.dangerouslyPasteHTML(0, update.content);
+            if(selection){
+              this.editor.quillEditor.setSelection(selection.index,selection.length);
+            }
+            console.log(this.editor.quillEditor.getSelection()?.index)
           }
         }
       });
