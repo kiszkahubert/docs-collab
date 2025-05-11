@@ -3,6 +3,7 @@ import {FormsModule} from '@angular/forms';
 import {AuthComponentComponent} from '../auth-component/auth-component.component';
 import {AuthService} from '../../services/auth.service';
 import {Router} from '@angular/router';
+import {MatSnackBar} from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-login',
@@ -11,7 +12,7 @@ import {Router} from '@angular/router';
   styleUrl: './login.component.css'
 })
 export class LoginComponent{
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router, private snackBar: MatSnackBar) {}
   handleLogin(creds: { email: string, password: string }) {
     this.authService.login(creds.email, creds.password)
       .subscribe({
@@ -19,7 +20,7 @@ export class LoginComponent{
           if(response.success) this.router.navigate(['/']);
         },
         error: (err) => {
-          console.error(err);
+          this.snackBar.open("Niepoprawne dane logownaia", 'OK',{duration:2000})
         }
       });
   }

@@ -20,6 +20,7 @@ import {PreviewService} from '../../services/preview.service';
 })
 export class ExistingDocumentComponent implements OnInit{
   previewImage: string = '';
+  @Input() currentUserId!: string;
   @Input() document!: Document;
   @Output() documentDeleted = new EventEmitter<string>();
   @Output() documentUpdated = new EventEmitter<Document>();
