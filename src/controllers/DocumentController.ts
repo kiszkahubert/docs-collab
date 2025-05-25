@@ -23,8 +23,7 @@ export const createNewDocument: RequestHandler = async (req: Request, res: Respo
         }
         res.status(201).json(createdDocument);
     } catch (err){
-        console.error(err);
-        res.status(500).json({message:"Error creating document"});
+        res.status(500).json({message:"Błąd podczas tworzenia dokumentu"});
     }
 };
 
@@ -60,7 +59,7 @@ export const getUserDocuments: RequestHandler = async (req: Request, res: Respon
         res.json(documents);
     } catch (err){
         console.error(err);
-        res.status(500).json({message:"error fetching documents"});
+        res.status(500).json({message:"Problem w pozyskaniu dokumentów"});
     }
 };
 
@@ -72,13 +71,13 @@ export const updateDocumentContent: RequestHandler = async (req: Request, res: R
         const {content, title} = req.body;
         const document = await getDocumentById(db, documentId);
         if(!document) {
-            res.status(404).json({message:"doc not found"});
+            res.status(404).json({message:"Dokument nie został znaleziony"});
             return;
         }
         if(document.userId.toString() !== req.user.userId ) {
             const sharedAccess = document.sharedWith?.find((sw: sharedWith)=>sw.userId.toString() === req.user.userId)
             if(!sharedAccess || !sharedAccess.canEdit){
-                res.status(403).json({message:"dont have access to edit this document"});
+                res.status(403).json({message:"Nie masz dostępu do tego dokumentu"});
                 return;
             }
         }
@@ -90,7 +89,7 @@ export const updateDocumentContent: RequestHandler = async (req: Request, res: R
         res.json({success:true});
     } catch(err){
         console.error(err);
-        res.status(500).json({message:"error updating the document"});
+        res.status(500).json({message:"Błąd podczas aktualizacji dokumentu"});
     }
 };
 
@@ -100,18 +99,18 @@ export const deleteUserDocument: RequestHandler = async (req: Request, res: Resp
         const documentId = req.params.id;
         const document = await getDocumentById(db, documentId);
         if(!document) {
-            res.status(404).json({message:"doc not found"});
+            res.status(404).json({message:"Dokument nie znaleziony"});
             return;
         }
         if(document.userId.toString() !== req.user.userId) {
-            res.status(403).json({message:"no access to delete this document"});
+            res.status(403).json({message:"Nie masz uprawnień aby usunąć ten dokument"});
             return;
         }
         await deleteDocument(db, documentId);
         res.json({success:true});
     } catch(err){
         console.error(err);
-        res.status(500).json({message:"error deleting the document"});
+        res.status(500).json({message:"Bład podczas usuwania dokumentu"});
     }
 };
 
@@ -122,20 +121,20 @@ export const shareDocument: RequestHandler = async(req:Request, res:Response): P
         const { email, canEdit } = req.body;
         const user = await db.collection('users').findOne({ email });
         if(!user){
-            res.status(404).json({message: "User not found"});
+            res.status(404).json({message: "Użytkownik nie znaleziony"});
             return;
         }
         const document = await getDocumentById(db, documentId);
         if(!document){
-            res.status(404).json({message: "document not found"});
+            res.status(404).json({message: "Dokument nie znaleziony"});
             return;
         }
         if(document.userId.toString() !== req.user.userId){
-            res.status(403).json({message:"Only owner can share its document"});
+            res.status(403).json({message:"Tylko właścicieł może udostępnić swój dokument"});
             return;
         }
         if(document.sharedWith?.some((sw: sharedWith) => sw.userId.toString() === user._id.toString())){
-            res.status(400).json({message:"user already has access"});
+            res.status(400).json({message:"Użytkownik ma już dostęp"});
             return;
         }
         await db.collection<Document>('documents').updateOne(
@@ -145,7 +144,7 @@ export const shareDocument: RequestHandler = async(req:Request, res:Response): P
         res.json({success: true});
     }catch(err){
         console.error(err);
-        res.status(500).json({message: "error sharing document"});
+        res.status(500).json({message: "Problem w udostępnieniu dokumentu"});
     }
 }
 export const revokeAccess: RequestHandler = async(req: Request, res: Response): Promise<void>=>{
@@ -154,11 +153,11 @@ export const revokeAccess: RequestHandler = async(req: Request, res: Response): 
         const {id, userId} = req.params;
         const document = await getDocumentById(db,id);
         if(!document){
-            res.status(404).json({message:"document not found"});
+            res.status(404).json({message:"Dokument nie znaleziony"});
             return;
         }
         if(document.userId.toString()!==req.user.userId){
-            res.status(403).json({message:"only owner can revoke access to its files"});
+            res.status(403).json({message:"Tylko użytkownik może usunąć dostęp do dokumentu"});
             return;
         }
         await db.collection<Document>('documents').updateOne(
@@ -168,7 +167,7 @@ export const revokeAccess: RequestHandler = async(req: Request, res: Response): 
         res.json({success:true})
     } catch(err){
         console.error(err);
-        res.status(500).json({message: "error revoking access"});
+        res.status(500).json({message: "Problem podczas usuwania dostępu"});
     }
 }
 
@@ -178,16 +177,16 @@ export const getDocumentSharedUsers: RequestHandler = async(req: Request, res: R
         const documentId = req.params.id;
         const document = await getDocumentById(db,documentId);
         if(!document){
-            res.status(404).json({message: "Document not found"});
+            res.status(404).json({message: "Dokument nie znaleziony"});
             return;
         }
         if(document.userId.toString()!==req.user.userId){
-            res.status(403).json({message: "Only owner can see its shared users"});
+            res.status(403).json({message: "Tylko użytkownik może zobaczyć użytkowników z dostępem do dokumentu"});
             return;
         }
         res.json(document.sharedWith || []);
     } catch(err){
         console.error(err);
-        res.status(500).json({message: "Error fetching shared users"});
+        res.status(500).json({message: "Problem z dostępem do dokumentów"});
     }
 }

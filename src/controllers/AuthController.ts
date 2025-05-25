@@ -8,6 +8,29 @@ export const register = async (req: Request, res:Response) =>{
     try{
         const db: Db = req.app.locals.db;
         const newUser: User = req.body;
+        const existingUser = await getUserByEmail(db,newUser.email);
+        if (!newUser.email?.trim() || !newUser.password?.trim() || !newUser.name?.trim() || !newUser.surname?.trim()) {
+            return res.status(400).json({ message: 'Wszystkie pola muszą być wypełnione' });
+        }
+        if(existingUser){
+            return res.status(409).json({ message: 'Użytkownik z takim adresem email już istnieje' });
+        }
+        if(newUser.email.length < 6 || newUser.email.length > 30){
+            return res.status(409).json({ message: 'Email musi mieć 6-20 znaków' });
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if(!emailRegex.test(newUser.email)){
+            return res.status(409).json({ message: 'Email musi być poprawny' });
+        }
+        if(newUser.password.length < 6 || newUser.password.length > 30){
+            return res.status(409).json({ message: 'Hasło musi mieć 6-20 znaków' });
+        }
+        if(newUser.name.length < 6 || newUser.name.length > 30){
+            return res.status(409).json({ message: 'Imię musi mieć 6-20 znaków' });
+        }
+        if(newUser.surname.length < 6 || newUser.surname.length > 30){
+            return res.status(409).json({ message: 'Nazwisko musi mieć 6-20 znaków' });
+        }
         newUser.password = await bcrypt.hash(newUser.password, 10);
         const createdUser = await createUser(db, newUser);
         res.status(201).json(createdUser);
