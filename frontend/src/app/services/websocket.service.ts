@@ -1,41 +1,57 @@
-import { Injectable } from '@angular/core';
-import { AuthService } from './auth.service';
-import {Subject} from 'rxjs';
+import { Injectable, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
-export class WebsocketService {
+export class WebsocketService implements OnDestroy {
   private socket: WebSocket | null = null;
   private documentId: string | null = null;
+  private isConnecting: boolean = false;
   public onContentUpdate = new Subject<{content: string, title: string}>();
-  constructor(private authService: AuthService) {}
+
   connectToDocument(documentId: string): void {
-    if (this.socket) {
-      this.disconnect();
+    if (this.documentId === documentId && this.socket && this.socket.readyState === WebSocket.OPEN) {
+      return;
     }
+    if (this.isConnecting) {
+      return;
+    }
+    this.isConnecting = true;
+    this.disconnect();
     this.documentId = documentId;
     this.socket = new WebSocket(`ws://localhost:3000/documents/ws?documentId=${documentId}`);
     this.socket.onopen = () => {
-      console.log('WebSocket connected');
+      this.isConnecting = false;
     };
     this.socket.onmessage = (event) => {
       const message = JSON.parse(event.data);
       this.handleSocketMessage(message);
     };
-    this.socket.onclose = () => {
-      console.log('WebSocket disconnected');
+    this.socket.onclose = (event) => {
+      this.isConnecting = false;
+      if (event.code !== 1000 && event.code !== 1001 && this.documentId) {
+        setTimeout(() => {
+          if (this.documentId) {
+            this.connectToDocument(this.documentId);
+          }
+        }, 1000);
+      }
     };
     this.socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
+      this.isConnecting = false;
     };
   }
+
   disconnect(): void {
     if (this.socket) {
-      this.socket.close();
+      this.socket.close(1000, 'Manual disconnect');
       this.socket = null;
     }
+    this.documentId = null;
+    this.isConnecting = false;
   }
+
   sendContentUpdate(content: string, title: string): void {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify({
@@ -43,8 +59,17 @@ export class WebsocketService {
         content,
         title
       }));
+    } else {
+      if (this.documentId && !this.isConnecting) {
+        this.connectToDocument(this.documentId);
+      }
     }
   }
+
+  getCurrentDocumentId(): string | null {
+    return this.documentId;
+  }
+
   private handleSocketMessage(message: any): void {
     switch (message.type) {
       case 'content_update':
@@ -53,32 +78,11 @@ export class WebsocketService {
           title: message.title
         });
         break;
-      case 'document_update':
-        this.handleDocumentUpdate(message.data);
-        break;
-      case 'user_joined':
-        this.handleUserJoined(message.data.userId);
-        break;
-      case 'user_left':
-        this.handleUserLeft(message.data.userId);
-        break;
-      case 'initial_connection':
-        this.handleInitialConnection(message.data);
-        break;
       default:
-        console.warn('Unknown message type:', message.type);
+        console.warn(message.type);
     }
   }
-  private handleDocumentUpdate(document: any): void {
-    console.log('Document updated:', document);
-  }
-  private handleUserJoined(userId: string): void {
-    console.log(`User ${userId} joined the document`);
-  }
-  private handleUserLeft(userId: string): void {
-    console.log(`User ${userId} left the document`);
-  }
-  private handleInitialConnection(data: any): void {
-    console.log('Initial connection:', data);
+  ngOnDestroy(): void {
+    this.disconnect();
   }
 }

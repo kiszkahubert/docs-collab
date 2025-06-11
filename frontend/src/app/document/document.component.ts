@@ -22,61 +22,151 @@ export class DocumentComponent implements OnInit, OnDestroy, AfterViewInit{
   private titleChangeSub: Subscription | undefined;
   private saveInProgress = false;
   private editorChangeSub : Subscription | undefined;
-  constructor(
-    private route: ActivatedRoute,
-    private documentService: DocumentService,
-    private websocketService: WebsocketService) {}
+  private isInitialized = false;
+  private isApplyingRemoteUpdate = false;
+
+  constructor(private route: ActivatedRoute, private documentService: DocumentService, private websocketService: WebsocketService) {}
+
   ngOnInit() {
     this.route.params.subscribe(params => {
-      this.documentId = params['id'];
+      const newDocumentId = params['id'];
+      if (this.documentId === newDocumentId && this.isInitialized) {
+        return;
+      }
+      this.documentId = newDocumentId;
+      this.isInitialized = true;
       this.websocketService.connectToDocument(this.documentId);
-      if(this.documentId) this.loadDocument();
-      this.websocketService.onContentUpdate.subscribe(update => {
-        const selection = this.editor.quillEditor.getSelection();
-        if (this.editorContent !== update.content || this.titleControl.value !== update.title) {
-          this.editorContent = update.content;
-          this.titleControl.setValue(update.title, { emitEvent: false });
-          if (this.editor && this.editor.quillEditor) {
-            this.editor.quillEditor.clipboard.dangerouslyPasteHTML(0, update.content);
-            if(selection){
-              this.editor.quillEditor.setSelection(selection.index,selection.length);
-            }
-            console.log(this.editor.quillEditor.getSelection()?.index)
-          }
-        }
-      });
+      if(this.documentId) {
+        this.loadDocument();
+      }
+      this.setupWebSocketSubscription();
     });
     this.titleChangeSub = this.titleControl.valueChanges
       .pipe(debounceTime(2000))
       .subscribe(()=>{
-        if(this.documentId && !this.saveInProgress) this.saveDocument();
-      })
+        if(this.documentId && !this.saveInProgress && !this.isApplyingRemoteUpdate) {
+          this.saveDocument();
+        }
+      });
+  }
+  private setupWebSocketSubscription() {
+    if (this.contentChangeSub) {
+      this.contentChangeSub.unsubscribe();
+    }
+    this.contentChangeSub = this.websocketService.onContentUpdate.subscribe(update => {
+      if (this.websocketService.getCurrentDocumentId() !== this.documentId) {
+        return;
+      }
+      if (this.isApplyingRemoteUpdate) {
+        return;
+      }
+      const currentContent = this.editor?.quillEditor?.root.innerHTML || '';
+      const currentTitle = this.titleControl.value || '';
+      if (currentContent === update.content && currentTitle === update.title) {
+        return;
+      }
+      this.applyRemoteUpdate(update);
+    });
+  }
+  private applyRemoteUpdate(update: {content: string, title: string}) {
+    if (!this.editor || !this.editor.quillEditor) {
+      this.editorContent = update.content;
+      this.titleControl.setValue(update.title, { emitEvent: false });
+      return;
+    }
+    this.isApplyingRemoteUpdate = true;
+    try {
+      const selection = this.editor.quillEditor.getSelection();
+      const currentContent = this.editor.quillEditor.root.innerHTML;
+      if (this.titleControl.value !== update.title) {
+        this.titleControl.setValue(update.title, { emitEvent: false });
+      }
+      if (currentContent !== update.content) {
+        this.temporarilyDisableChangeTracking();
+        const quill = this.editor.quillEditor;
+        quill.deleteText(0, quill.getLength());
+        quill.clipboard.dangerouslyPasteHTML(0, update.content);
+        this.editorContent = update.content;
+        if (selection) {
+          setTimeout(() => {
+            if (this.editor && this.editor.quillEditor) {
+              try {
+                const textLength = this.editor.quillEditor.getLength();
+                const safeIndex = Math.min(selection.index, Math.max(0, textLength - 1));
+                const safeLength = Math.min(selection.length, Math.max(0, textLength - safeIndex));
+                this.editor.quillEditor.setSelection(safeIndex, safeLength);
+              } catch (error) {
+                try {
+                  const endPosition = this.editor.quillEditor.getLength() - 1;
+                  this.editor.quillEditor.setSelection(Math.max(0, endPosition), 0);
+                } catch (fallbackError) {}
+              }
+            }
+          }, 0);
+        }
+        setTimeout(() => {
+          this.enableChangeTracking();
+        }, 100);
+      }
+    } finally {
+      setTimeout(() => {
+        this.isApplyingRemoteUpdate = false;
+      }, 150);
+    }
+  }
+  private temporarilyDisableChangeTracking() {
+    if (this.editorChangeSub) {
+      this.editorChangeSub.unsubscribe();
+      this.editorChangeSub = undefined;
+    }
+  }
+  private enableChangeTracking() {
+    if (!this.editorChangeSub && this.editor) {
+      this.setupEditorSubscription();
+    }
   }
   ngAfterViewInit(){
+    setTimeout(() => {
+      this.setupEditorSubscription();
+    }, 100);
+  }
+  private setupEditorSubscription() {
+    if (this.editorChangeSub) {
+      this.editorChangeSub.unsubscribe();
+    }
     this.editorChangeSub = this.editor.onContentChanged
       .subscribe((change: any) =>{
+        if (this.isApplyingRemoteUpdate) {
+          return;
+        }
         if(change.source === 'user'){
           this.editorContent = this.editor.quillEditor.root.innerHTML;
-          console.log(this.editorContent);
           this.hasUnsavedChanges = true;
-          this.websocketService.sendContentUpdate(
-            this.editorContent,
-            this.titleControl.value || 'Untitled'
-          );
+          setTimeout(() => {
+            if (!this.isApplyingRemoteUpdate) {
+              this.websocketService.sendContentUpdate(
+                this.editorContent,
+                this.titleControl.value || 'Untitled'
+              );
+            }
+          }, 50);
           if(this.documentId && !this.saveInProgress){
             this.saveDocument();
           }
         }
-      })
+      });
   }
+
   ngOnDestroy() {
+    this.isInitialized = false;
     if (this.contentChangeSub) this.contentChangeSub.unsubscribe();
     if (this.titleChangeSub) this.titleChangeSub.unsubscribe();
     if (this.editorChangeSub) this.editorChangeSub.unsubscribe();
   }
+
   @HostListener('window:beforeunload',['$event'])
   async beforeUnloadHandler(event: BeforeUnloadEvent){
-    if(this.documentId && !this.saveInProgress){
+    if(this.hasUnsavedChanges && this.documentId && !this.saveInProgress){
       event.returnValue = false;
       try{
         this.saveInProgress = true;
@@ -90,21 +180,24 @@ export class DocumentComponent implements OnInit, OnDestroy, AfterViewInit{
       }
     }
   }
+
   loadDocument() {
     this.documentService.getDocument(this.documentId).subscribe(
       document => {
         this.editorContent = document.content;
         this.titleControl.setValue(document.title, { emitEvent: false });
+        this.hasUnsavedChanges = false;
         if (this.editor && this.editor.quillEditor) {
           this.editor.quillEditor.clipboard.dangerouslyPasteHTML(0, document.content);
         }
       },
-      err => {
-        console.error(err);
-      }
+      err => {}
     );
   }
   saveDocument(){
+    if (this.saveInProgress || this.isApplyingRemoteUpdate) {
+      return;
+    }
     this.saveInProgress = true;
     this.documentService.updateDocument(
       this.documentId,
@@ -113,9 +206,9 @@ export class DocumentComponent implements OnInit, OnDestroy, AfterViewInit{
     ).subscribe(
       () => {
         this.saveInProgress = false;
+        this.hasUnsavedChanges = false;
       },
       err => {
-        console.error(err);
         this.saveInProgress = false;
       }
     );
